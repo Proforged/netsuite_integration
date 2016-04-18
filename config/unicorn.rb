@@ -2,6 +2,7 @@
 worker_processes ENV.fetch('WORKER_PROCESSES', 1).to_i
 
 timeout 240
+listen 3000
 
 preload_app true
 

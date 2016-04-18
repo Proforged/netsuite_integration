@@ -1,25 +1,18 @@
-FROM rlister/ruby:2.0.0
-MAINTAINER Ric Lister <ric@spreecommerce.com>
+FROM ruby:2.3.0
 
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive \
-    apt-get install -yq \
-    build-essential \
-    zlib1g-dev libreadline6-dev libyaml-dev libssl-dev \
-    git
+RUN gem install bundler
+RUN bundle config --global frozen 1
 
-## help docker cache bundle
-WORKDIR /tmp
-ADD ./Gemfile /tmp/
-ADD ./Gemfile.lock /tmp/
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
 
-RUN bundle install
-RUN rm -f /tmp/Gemfile /tmp/Gemfile.lock
+COPY ./Gemfile /usr/src/app/Gemfile
+COPY ./Gemfile.lock /usr/src/app/Gemfile.lock
 
-WORKDIR /app
-ADD ./ /app
+RUN bundle install --jobs=20
 
-EXPOSE 5000
+COPY . /usr/src/app
 
-ENTRYPOINT [ "bundle", "exec" ]
-CMD [ "foreman", "start" ]
+EXPOSE 3000
+
+CMD ["bundle","exec","unicorn","-E","production","-c","./config/unicorn.rb"]
